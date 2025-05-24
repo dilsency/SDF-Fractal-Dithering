@@ -15,3 +15,4 @@ Many quality improvements are missing too such as the variable SDF edge width, a
 
 ## Acknowledgements
 Thanks to Rune for the inspiring video that started it all. https://www.youtube.com/watch?v=HPqGaIMVuLs
+See more details and the original implementation here: https://github.com/runevision/Dither3D
