@@ -24,7 +24,7 @@ Shader "Unlit/Simple_FractalDithering"
         [Toggle(QUANTIZE_DOTS)] _QuantizeDots ("Quantize Dots", float) = 0
         
         [KeywordEnum(Circle, Star, Moon, Heart, CoolS)] _Shape ("SDF Shape", int) = 0
-        [KeywordEnum(None, Freq, UV, Grid, Bayer, SDF)] _Debug ("Debug Mode",int) = 0
+        [KeywordEnum(None, Freq, UV, Cell, Bayer, SDF)] _Debug ("Debug Mode",int) = 0
     }
     SubShader
     {
@@ -38,7 +38,7 @@ Shader "Unlit/Simple_FractalDithering"
             
             #pragma target 4.5
             
-            #pragma shader_feature _DEBUG_NONE _DEBUG_FREQ _DEBUG_UV _DEBUG_GRID _DEBUG_BAYER _DEBUG_SDF
+            #pragma shader_feature _DEBUG_NONE _DEBUG_FREQ _DEBUG_UV _DEBUG_CELL _DEBUG_BAYER _DEBUG_SDF
             #pragma shader_feature _BAYER_LEVEL1 _BAYER_LEVEL2 _BAYER_LEVEL3 _BAYER_LEVEL4 _BAYER_LEVEL5 _BAYER_LEVEL6 _BAYER_LEVEL7 _BAYER_LEVEL8
             #pragma shader_feature _SHAPE_CIRCLE _SHAPE_STAR _SHAPE_MOON _SHAPE_HEART _SHAPE_COOLS
             #pragma shader_feature QUANTIZE_DOTS
@@ -199,19 +199,20 @@ Shader "Unlit/Simple_FractalDithering"
                 float dots = AA_SDF(minSDF);
 
                 #ifdef _DEBUG_FREQ
-                return frac(floor(logLevel) / 4);
+                float4 d_color = frac(floor(logLevel) / 2) < 0.5 ? float4(1,0,0,1) : float4(0,1,0,1);
+                return lerp(d_color, 0, dots/2);
                 #endif
                 
                 #ifdef _DEBUG_UV
-                return lerp(float4(tileUV, 0 , 0), 0, dots);
+                return lerp(float4(tileUV, 0 , 0), 0, dots/2);
                 #endif
                 
-                #ifdef _DEBUG_GRID
-                return lerp(float4(cellUV, 0, 0), 0, dots);
+                #ifdef _DEBUG_CELL
+                return lerp(float4(cellUV, 0, 0), 0, dots/2);
                 #endif
                 
                 #ifdef _DEBUG_BAYER
-                return lerp(bayer, 0, dots);
+                return lerp(bayer, 0, dots/2);
                 #endif
 
                 #ifdef _DEBUG_SDF
