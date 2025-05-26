@@ -207,7 +207,6 @@ Shader "Unlit/Simple_FractalDithering"
                 // turn SDF into antialiased edge
                 float smoothness = _AASmoothness + _AAStretch / (frequencies.y / frequencies.x);
                 float dots = AA_SDF(minSDF, smoothness);
-                dots = Gamma22ToLinear(dots);
 
                 #if _DEBUG_LUMINANCE
                 return float4(luminance.xxx, 1);
@@ -229,7 +228,8 @@ Shader "Unlit/Simple_FractalDithering"
                 return minSDF;
                 #endif
 
-                return lerp(_Color1, _Color2, dots);
+                // lerp in perceptual space
+                return Gamma22ToLinear(lerp(LinearToGamma22(_Color1), LinearToGamma22(_Color2), dots));
             }
             ENDHLSL
         }
