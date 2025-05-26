@@ -10,11 +10,7 @@
 #define INCLUDE_RUNEVISION
 
 float4 CalculateFrequency_Rune(float2 uv_DitherTex, float4 screenPos, float2 dx, float2 dy, int level, float scale)
-{
-    // my old naive method
-    //float zdepth = LinearEyeDepth(screenPos.z, _ZBufferParams);
-    //return zdepth * exp2(-_Scale);
-    
+{    
     #if (RADIAL_COMPENSATION)
         // Make screenPos have 0,0 in the center of the screen.
         float2 screenP = (screenPos.xy / screenPos.w - 0.5) * 2.0;

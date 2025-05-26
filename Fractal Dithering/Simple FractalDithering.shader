@@ -126,7 +126,7 @@ Shader "Unlit/Simple_FractalDithering"
                 o.positionWS = positions.positionWS;
                 o.normalWS = normals.normalWS;
                 
-                o.uv = (v.uv * 2 - 1) * 100; // try to improve precision
+                o.uv = v.uv;
                 
                 return o;
             }
