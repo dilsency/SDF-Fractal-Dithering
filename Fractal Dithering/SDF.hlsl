@@ -85,8 +85,15 @@ float AA_SDF(float value)
     float dist = -value;
     float2 ddist = float2(ddx(dist), ddy(dist));
     float pixelDist = dist / length(ddist);
-    
     return saturate(pixelDist);
+}
+
+float AA_SDF(float value, float smoothness)
+{
+    float2 ddist = float2(ddx(value), ddy(value));
+    float w = 0.5 * saturate(length(ddist));
+    w *= smoothness;
+    return smoothstep(-w, w, -value);
 }
 
 #endif

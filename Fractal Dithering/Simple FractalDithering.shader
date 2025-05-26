@@ -23,8 +23,11 @@ Shader "Unlit/Simple_FractalDithering"
         [KeywordEnum(Level1, Level2, Level3, Level4, Level5, Level6, Level7, Level8)] _Bayer ("Bayer Level",int) = 2
         [Toggle(QUANTIZE_DOTS)] _QuantizeDots ("Quantize Dots", float) = 0
         
+        [Min(1)] _AASmoothness ("AA Smoothness", float) = 1.5
+        [Min(0)] _AAStretch ("AA Stretch", float) = 0.125
+        
         [KeywordEnum(Circle, Star, Moon, Heart, CoolS)] _Shape ("SDF Shape", int) = 0
-        [KeywordEnum(None, Freq, UV, Cell, Bayer, SDF)] _Debug ("Debug Mode",int) = 0
+        [KeywordEnum(None, Luminance, Freq, UV, Cell, Bayer, SDF)] _Debug ("Debug Mode",int) = 0
     }
     SubShader
     {
@@ -38,7 +41,7 @@ Shader "Unlit/Simple_FractalDithering"
             
             #pragma target 4.5
             
-            #pragma shader_feature _DEBUG_NONE _DEBUG_FREQ _DEBUG_UV _DEBUG_CELL _DEBUG_BAYER _DEBUG_SDF
+            #pragma shader_feature _DEBUG_NONE _DEBUG_LUMINANCE _DEBUG_FREQ _DEBUG_UV _DEBUG_CELL _DEBUG_BAYER _DEBUG_SDF
             #pragma shader_feature _BAYER_LEVEL1 _BAYER_LEVEL2 _BAYER_LEVEL3 _BAYER_LEVEL4 _BAYER_LEVEL5 _BAYER_LEVEL6 _BAYER_LEVEL7 _BAYER_LEVEL8
             #pragma shader_feature _SHAPE_CIRCLE _SHAPE_STAR _SHAPE_MOON _SHAPE_HEART _SHAPE_COOLS
             #pragma shader_feature QUANTIZE_DOTS
@@ -73,13 +76,13 @@ Shader "Unlit/Simple_FractalDithering"
             #elif defined(_BAYER_LEVEL8)
                 #define LEVEL                8
             #endif
-            
-            #define LEVEL_RESOLUTION         exp2(LEVEL)
-            #define LEVEL_DOTCOUNT           (LEVEL_RESOLUTION * LEVEL_RESOLUTION)
 
-            #define LEVEL_PREV               (LEVEL - 1)
-            #define LEVEL_PREV_RESOLUTION    exp2(LEVEL_PREV)
-            #define LEVEL_PREV_DOTCOUNT      (LEVEL_PREV_RESOLUTION * LEVEL_PREV_RESOLUTION)
+            #define LEVEL_RESOLUTION         exp2(LEVEL)                                        // side length of bayer level
+            #define LEVEL_DOTCOUNT           (LEVEL_RESOLUTION * LEVEL_RESOLUTION)              // number of dots in bayer level
+
+            #define LEVEL_PREV               (LEVEL - 1)                                        // next lower level index
+            #define LEVEL_PREV_RESOLUTION    exp2(LEVEL_PREV)                                   // side length of lower bayer level
+            #define LEVEL_PREV_DOTCOUNT      (LEVEL_PREV_RESOLUTION * LEVEL_PREV_RESOLUTION)    // number of dots in lower bayer level
             
             struct appdata
             {
@@ -108,6 +111,9 @@ Shader "Unlit/Simple_FractalDithering"
 
             float _InputExposure;
             float _InputOffset;
+
+            float _AASmoothness;
+            float _AAStretch;
             
             v2f vert (appdata v)
             {
@@ -140,13 +146,13 @@ Shader "Unlit/Simple_FractalDithering"
                 float albedo = dot(float3(0.299, 0.587, 0.114), tex2D(_MainTex, i.uv).rgb);
 
                 // calculate brightness of fragment
-                float brightness = min(shadow, shading) * albedo;
-                brightness = saturate(brightness * _InputExposure + _InputOffset);
-                brightness = clamp(brightness, _Clamp.x, _Clamp.y);
+                float luminance = min(shadow, shading) * albedo;
+                luminance = saturate(luminance * _InputExposure + _InputOffset);
+                luminance = clamp(luminance, _Clamp.x, _Clamp.y);
 
                 // calculate 
                 float4 frequencies = CalculateFrequency_Rune(i.uv, i.clipPos, ddx_fine(i.uv), ddy_fine(i.uv), LEVEL, _Scale);
-                float logLevel = log2(frequencies.w / brightness);
+                float logLevel = log2(frequencies.w / luminance);
                 float floorLog = floor(logLevel);
                 float fracLog = logLevel - floorLog; // same as frac(logLevel)
 
@@ -163,25 +169,25 @@ Shader "Unlit/Simple_FractalDithering"
                     GetBayerFromCoordLevel_Direct(cellCoord + uint2(0,1), LEVEL),
                     GetBayerFromCoordLevel_Direct(cellCoord + uint2(1,1), LEVEL));
 
-                // number each bayer dot sequentially then subtract the count of dots on the level above. ie (N-1)^2
+                // number each bayer dot sequentially then subtract the count of dots on the level above. ie 2^(N-1)
                 float4 bayerMask = (bayer * LEVEL_DOTCOUNT) - LEVEL_PREV_DOTCOUNT; // only want the dots that weren't on prev level
 
                 // create a 0-1 mask for each Bayer dot that controls if it can be seen (also scales the dot in)
                 const float numNewDots = LEVEL_DOTCOUNT - LEVEL_PREV_DOTCOUNT;
 
-                // each bayer dot is sequentially a number in range [1, N) according to its intensity value
-                // subtract the number of dots on the next higher level (N-1)^2 so this many first dots have a negative value
-                // bayer dots are visible when fracLog*numNewDots is greater than their value
+                // Each dot is numbered sequentially in range [0, 2^N) according to its intensity value
+                // A dot will be visible if the value (fracLog*numNewDots) is greater than their value (when quantization is on, otherwise it blends in)
+                // Subtract the number of dots on the previous level (ie 2^(N-1)) so that this many dots have a negative value and are always visible
                 float invisible = numNewDots * (1-fracLog);
-                float4 scales = (saturate(invisible - bayerMask));
+                float4 scales = invisible - bayerMask;
                 #ifdef QUANTIZE_DOTS
-                scales = step(1,scales);
+                scales = step(1,scales); // dot only appears when value is >1
+                #else
+                scales = saturate(scales); // 0-1 blend in dot
                 #endif
 
                 // scale the dots cell according to their bayer value so dots scale/appear with relation to fracLog
-                float x = fracLog;
-                x = (1-(pow(1-x, 0.5))); // found that doing this removed some of the banding, based on eye test
-                float4 scalar = rcp((x * 0.5 + 0.5) * brightness * scales);
+                float4 scalar = rcp((fracLog * 0.5 + 0.5) * luminance * scales);
                 float2 sample0 = (cellUV + float2(+0.5, +0.5)) * scalar.x;
                 float2 sample1 = (cellUV + float2(-0.5, +0.5)) * scalar.y;
                 float2 sample2 = (cellUV + float2(+0.5, -0.5)) * scalar.z;
@@ -194,28 +200,32 @@ Shader "Unlit/Simple_FractalDithering"
                     SDF(sample1, _DotRadius),
                     SDF(sample2, _DotRadius),
                     SDF(sample3, _DotRadius));
-                
-                float minSDF = min(min(SDFs.x, SDFs.y), min(SDFs.z, SDFs.w)) ;
-                float dots = AA_SDF(minSDF);
 
-                #ifdef _DEBUG_FREQ
+                // combine the 4 corner dot sdfs
+                float minSDF = min(min(SDFs.x, SDFs.y), min(SDFs.z, SDFs.w)) ;
+                
+                // turn SDF into antialiased edge
+                float smoothness = _AASmoothness + _AAStretch / (frequencies.y / frequencies.x);
+                float dots = AA_SDF(minSDF, smoothness);
+                dots = Gamma22ToLinear(dots);
+
+                #if _DEBUG_LUMINANCE
+                return float4(luminance.xxx, 1);
+                
+                #elif _DEBUG_FREQ
                 float4 d_color = frac(floor(logLevel) / 2) < 0.5 ? float4(1,0,0,1) : float4(0,1,0,1);
                 return lerp(d_color, 0, dots/2);
-                #endif
                 
-                #ifdef _DEBUG_UV
+                #elif _DEBUG_UV
                 return lerp(float4(tileUV, 0 , 0), 0, dots/2);
-                #endif
                 
-                #ifdef _DEBUG_CELL
+                #elif _DEBUG_CELL
                 return lerp(float4(cellUV, 0, 0), 0, dots/2);
-                #endif
                 
-                #ifdef _DEBUG_BAYER
+                #elif _DEBUG_BAYER
                 return lerp(bayer, 0, dots/2);
-                #endif
-
-                #ifdef _DEBUG_SDF
+                
+                #elif _DEBUG_SDF
                 return minSDF;
                 #endif
 
