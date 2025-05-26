@@ -46,9 +46,6 @@ Shader "Unlit/Simple_FractalDithering"
             #pragma shader_feature _SHAPE_CIRCLE _SHAPE_STAR _SHAPE_MOON _SHAPE_HEART _SHAPE_COOLS
             #pragma shader_feature QUANTIZE_DOTS
 
-            #pragma shader_feature INVERT_A
-            #pragma shader_feature INVERT_B
-
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile_fragment _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
 
@@ -205,8 +202,9 @@ Shader "Unlit/Simple_FractalDithering"
                 float minSDF = min(min(SDFs.x, SDFs.y), min(SDFs.z, SDFs.w)) ;
                 
                 // turn SDF into antialiased edge
-                float smoothness = _AASmoothness + _AAStretch / (frequencies.y / frequencies.x);
-                float dots = AA_SDF(minSDF, smoothness);
+                float smoothness = _AASmoothness;
+                float grazingSmoothing = _AAStretch * frequencies.x / frequencies.y;
+                float dots = AA_SDF(minSDF, smoothness + grazingSmoothing);
 
                 #if _DEBUG_LUMINANCE
                 return float4(luminance.xxx, 1);
