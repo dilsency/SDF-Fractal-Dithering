@@ -7,9 +7,9 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Unlit_Simple_FractalDithering
+  m_Name: Unlit_Simple_FractalDithering Variant 2
   m_Shader: {fileID: 4800000, guid: ffad2f103a758bf478ad4dd41747968d, type: 3}
-  m_Parent: {fileID: 0}
+  m_Parent: {fileID: 2100000, guid: 809aa86683440764eb549ba8e0067bb5, type: 2}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - QUANTIZE_DOTS
@@ -28,31 +28,12 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 10309, guid: 0000000000000000f000000000000000, type: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
+    m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _AASmoothness: 1.5
-    - _AAStretch: 0.125
-    - _Bayer: 2
-    - _Debug: 0
-    - _DotRadius: 1.416
-    - _InputExposure: 1
-    - _InputOffset: 0
-    - _InvertA: 0
-    - _InvertB: 1
-    - _Power: 0.6
-    - _PowerA: 1
-    - _PowerB: 0.5
-    - _QuantizeDots: 1
-    - _Scale: 4
-    - _Shape: 4
+    - _DotRadius: 0.928
     m_Colors:
-    - _Clamp: {r: 0, g: 1, b: 0, a: 0}
-    - _Color1: {r: 0.056557365, g: 0.052643314, b: 0.8584906, a: 1}
-    - _Color2: {r: 1, g: 0.34757438, b: 0, a: 1}
+    - _Clamp: {r: 0.2, g: 0.27, b: 0, a: 0}
+    - _Color2: {r: 1, g: 0, b: 0.25548172, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

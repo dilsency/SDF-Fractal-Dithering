@@ -7,18 +7,18 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Unlit_Simple_FractalDithering
-  m_Shader: {fileID: 4800000, guid: ffad2f103a758bf478ad4dd41747968d, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - QUANTIZE_DOTS
-  - _BAYER_LEVEL3
-  - _DEBUG_NONE
-  - _SHAPE_HEXAGON
+  m_Name: Unlit_Simple_FractalDithering Variant
+  m_Shader: {fileID: 4800000, guid: 250d55d534cab48b0b8f973ca87ece91, type: 3}
+  m_Parent: {fileID: 2100000, guid: f02e7627cbacc481aa080c2f39b8d2fe, type: 2}
+  m_ModifiedSerializedProperties: 8
+  m_ValidKeywords: []
   m_InvalidKeywords:
   - INVERT_B
+  - QUANTIZE_DOTS
+  - _BAYER_LEVEL3
   - _DEBUG_GRID
+  - _DEBUG_NONE
+  - _SHAPE_SQUARE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -35,24 +35,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AASmoothness: 1.5
-    - _AAStretch: 0.125
     - _Bayer: 2
     - _Debug: 0
-    - _DotRadius: 1.416
     - _InputExposure: 1
     - _InputOffset: 0
-    - _InvertA: 0
-    - _InvertB: 1
-    - _Power: 0.6
-    - _PowerA: 1
-    - _PowerB: 0.5
     - _QuantizeDots: 1
-    - _Scale: 4
-    - _Shape: 4
+    - _Shape: 1
     m_Colors:
-    - _Clamp: {r: 0, g: 1, b: 0, a: 0}
-    - _Color1: {r: 0.056557365, g: 0.052643314, b: 0.8584906, a: 1}
-    - _Color2: {r: 1, g: 0.34757438, b: 0, a: 1}
+    - _Color1: {r: 0.2, g: 0.10302789, b: 0.098039225, a: 1}
+    - _Color2: {r: 1, g: 0, b: 0.8549242, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

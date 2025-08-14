@@ -148,6 +148,14 @@ Shader "Unlit/Simple_FractalDithering"
                 luminance = saturate(luminance * _InputExposure + _InputOffset);
                 luminance = clamp(luminance, _Clamp.x, _Clamp.y);
 
+                // testing only
+                /*
+                const int bands = 8;
+                luminance = floor(luminance * bands) / (bands - 1);
+                */
+                if(luminance <= 0.4){luminance = 0;}
+                else if (luminance >= 0.6){luminance = 0;}
+
                 // calculate 
                 float4 frequencies = CalculateFrequency_Rune(i.uv, i.clipPos, ddx_fine(i.uv), ddy_fine(i.uv), LEVEL, _Scale);
                 float logLevel = log2(frequencies.w / luminance);
@@ -226,6 +234,14 @@ Shader "Unlit/Simple_FractalDithering"
                 #elif _DEBUG_SDF
                 return minSDF;
                 #endif
+
+                // testing only
+                /*
+                return 0.5;
+                dots = AA_SDF(minSDF, 0.0);
+                return dots;
+                return lerp(_Color1, dots, 0.5);
+                */
 
                 // lerp in perceptual space
                 return Gamma22ToLinear(lerp(LinearToGamma22(_Color1), LinearToGamma22(_Color2), dots));

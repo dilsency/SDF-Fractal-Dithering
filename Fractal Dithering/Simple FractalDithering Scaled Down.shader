@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-Shader "Unlit/Simple_FractalDithering"
+Shader "Unlit/Simple_FractalDithering_ScaledDown"
 {
     Properties
     {
@@ -81,7 +81,7 @@ Shader "Unlit/Simple_FractalDithering"
             #define LEVEL_PREV               (LEVEL - 1)                                        // next lower level index
             #define LEVEL_PREV_RESOLUTION    exp2(LEVEL_PREV)                                   // side length of lower bayer level
             #define LEVEL_PREV_DOTCOUNT      (LEVEL_PREV_RESOLUTION * LEVEL_PREV_RESOLUTION)    // number of dots in lower bayer level
-            
+
             struct appdata
             {
                 float4 vertex : POSITION;

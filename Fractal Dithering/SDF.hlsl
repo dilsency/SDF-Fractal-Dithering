@@ -9,9 +9,55 @@ float dot2(float2 vec)
     return dot(vec, vec);
 }
 
+float ndot(float2 a, float2 b ) { return a.x * b.x - a.y * b.y; }
+
 float SDF_Circle(float2 p, float r)
 {
     return length(p) - r;
+}
+
+float SDF_Square(float2 p, float r)
+{
+    float2 d = abs(p) - r;
+    return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
+}
+
+float SDF_Rhombus(float2 p, float r)
+{
+    float2 p2 = float2(r,r);
+    p = abs(p);
+    float h = clamp( ndot(p2-2.0*p,p2)/dot(p2,p2), -1.0, 1.0 );
+    float d = length( p-0.5*p2*float2(1.0-h,1.0+h) );
+    return d * sign( p.x*p2.y + p.y*p2.x - p2.x*p2.y );
+}
+
+float SDF_Pentagon(float2 p, float r)
+{
+    const float3 k = float3(0.809016994,0.587785252,0.726542528);
+    p.x = abs(p.x);
+    p -= 2.0*min(dot(float2(-k.x,k.y),p),0.0)*float2(-k.x,k.y);
+    p -= 2.0*min(dot(float2( k.x,k.y),p),0.0)*float2( k.x,k.y);
+    p -= float2(clamp(p.x,-r*k.z,r*k.z),r);    
+    return length(p)*sign(p.y);
+}
+
+float SDF_Hexagon(float2 p, float r)
+{
+    const float3 k = float3(-0.866025404,0.5,0.577350269);
+    p = abs(p);
+    p -= 2.0*min(dot(k.xy,p),0.0)*k.xy;
+    p -= float2(clamp(p.x, -k.z*r, k.z*r), r);
+    return length(p)*sign(p.y);
+}
+
+float SDF_Octogon(float2 p, float r)
+{
+    const float3 k = float3(-0.9238795325, 0.3826834323, 0.4142135623 );
+    p = abs(p);
+    p -= 2.0*min(dot(float2( k.x,k.y),p),0.0)*float2( k.x,k.y);
+    p -= 2.0*min(dot(float2(-k.x,k.y),p),0.0)*float2(-k.x,k.y);
+    p -= float2(clamp(p.x, -k.z*r, k.z*r), r);
+    return length(p)*sign(p.y);
 }
 
 float SDF_Star5(in float2 p, in float r, in float rf)
@@ -69,6 +115,16 @@ float SDF(float2 p, float radius)
 {
     #if defined(_SHAPE_CIRCLE)
     return SDF_Circle(p, radius);
+    #elif defined(_SHAPE_SQUARE)
+    return SDF_Square(p, radius);
+    #elif defined(_SHAPE_RHOMBUS)
+    return SDF_Rhombus(p, radius);
+    #elif defined(_SHAPE_PENTAGON)
+    return SDF_Pentagon(p, radius);
+    #elif defined(_SHAPE_HEXAGON)
+    return SDF_Hexagon(p, radius);
+    #elif defined(_SHAPE_OCTOGON)
+    return SDF_Octogon(p, radius);
     #elif defined(_SHAPE_STAR)
     return SDF_Star5(p, radius, 0.5);
     #elif defined(_SHAPE_MOON)
