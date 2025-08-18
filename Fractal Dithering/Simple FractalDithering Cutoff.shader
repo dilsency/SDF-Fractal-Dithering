@@ -140,8 +140,10 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
             {
                 // surface properties
                 float shadow = MainLightRealtimeShadow(TransformWorldToShadowCoord(i.positionWS));
-                float shading = pow(saturate(dot(normalize(i.normalWS), _MainLightPosition.xyz)), .5);
+                float dot1 = dot(normalize(i.normalWS), _MainLightPosition.xyz);
+                float shading = pow(saturate(dot1), .5);
                 float albedo = dot(float3(0.299, 0.587, 0.114), tex2D(_MainTex, i.uv).rgb);
+
 
                 // calculate brightness of fragment
                 float luminance = min(shadow, shading) * albedo;
@@ -242,6 +244,14 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                 return dots;
                 return lerp(_Color1, dots, 0.5);
                 */
+                float halfPoint = 0.5f;
+                if(dot1 >= halfPoint)
+                {
+                    return _Color1;
+                }
+                else {
+                    return _Color2 + dots;
+                }
 
                 // lerp in perceptual space
                 return Gamma22ToLinear(lerp(LinearToGamma22(_Color1), LinearToGamma22(_Color2), dots));
