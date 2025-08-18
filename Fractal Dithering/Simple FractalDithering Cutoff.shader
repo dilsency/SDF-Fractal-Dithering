@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-Shader "Unlit/Simple_FractalDithering"
+Shader "Unlit/Simple_FractalDithering_Cutoff"
 {
     Properties
     {

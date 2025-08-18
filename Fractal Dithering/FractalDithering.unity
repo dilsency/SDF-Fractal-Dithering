@@ -291,7 +291,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 109138813}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &109138817
 Transform:
   m_ObjectHideFlags: 0
@@ -424,7 +424,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 260326044}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &260326049
 Transform:
   m_ObjectHideFlags: 0
@@ -533,7 +533,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 545734516}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &545734520
 Transform:
   m_ObjectHideFlags: 0
@@ -804,7 +804,7 @@ GameObject:
   - component: {fileID: 1049876259}
   - component: {fileID: 1049876263}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: sphere with cutoff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -883,7 +883,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1049876258}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &1049876262
 Transform:
   m_ObjectHideFlags: 0
@@ -1132,7 +1132,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: be0ea659ffd5b4da2a31fdb2179a758f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: bcd251849846c47f9a5428b933954468, type: 2}
+      objectReference: {fileID: 2100000, guid: d22a269352cb34ea7bfe705e9baa08ca, type: 2}
     - target: {fileID: 919132149155446097, guid: be0ea659ffd5b4da2a31fdb2179a758f, type: 3}
       propertyPath: m_Name
       value: teapot
@@ -1270,7 +1270,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1802629311}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &1802629315
 Transform:
   m_ObjectHideFlags: 0
