@@ -34,7 +34,10 @@ public class CameraMovement : MonoBehaviour
     private float dragSpeed = 3f;
 
     [SerializeField]
-    TextMeshProUGUI uiText;
+    private GameObject targetLookAt;
+
+    [SerializeField]
+    private TextMeshProUGUI uiText;
 
     private float yaw = 0f;
     private float pitch = 0f;
@@ -59,6 +62,9 @@ public class CameraMovement : MonoBehaviour
 
     private void Start()
     {
+        // only once, look at specified object
+        this.transform.LookAt(targetLookAt.transform);
+
         if (uiText != null)
         {
             uiText.text = "hej test";

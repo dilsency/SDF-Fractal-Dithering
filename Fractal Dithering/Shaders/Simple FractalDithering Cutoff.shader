@@ -27,7 +27,7 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
         [Min(0)] _AAStretch ("AA Stretch", float) = 0.125
         
         [KeywordEnum(Circle, Square, Rhombus, Pentagon, Hexagon, Octogon, Star, Moon, Heart, CoolS)] _Shape ("SDF Shape", int) = 0
-        [KeywordEnum(None, Luminance, Freq, UV, Cell, Bayer, SDF)] _Debug ("Debug Mode",int) = 0
+        [KeywordEnum(None, Luminance, Freq, UV, Cell, Bayer, SDF, DilsTest1, DilsTest2)] _Debug ("Debug Mode",int) = 0
     }
     SubShader
     {
@@ -41,7 +41,7 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
             
             #pragma target 4.5
             
-            #pragma shader_feature _DEBUG_NONE _DEBUG_LUMINANCE _DEBUG_FREQ _DEBUG_UV _DEBUG_CELL _DEBUG_BAYER _DEBUG_SDF
+            #pragma shader_feature _DEBUG_NONE _DEBUG_LUMINANCE _DEBUG_FREQ _DEBUG_UV _DEBUG_CELL _DEBUG_BAYER _DEBUG_SDF _DEBUG_DILSTEST1 _DEBUG_DILSTEST2
             #pragma shader_feature _BAYER_LEVEL1 _BAYER_LEVEL2 _BAYER_LEVEL3 _BAYER_LEVEL4 _BAYER_LEVEL5 _BAYER_LEVEL6 _BAYER_LEVEL7 _BAYER_LEVEL8
             #pragma shader_feature _SHAPE_CIRCLE _SHAPE_SQUARE _SHAPE_RHOMBUS _SHAPE_PENTAGON _SHAPE_HEXAGON _SHAPE_OCTOGON _SHAPE_STAR _SHAPE_MOON _SHAPE_HEART _SHAPE_COOLS
             #pragma shader_feature QUANTIZE_DOTS
@@ -144,19 +144,10 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                 float shading = pow(saturate(dot1), .5);
                 float albedo = dot(float3(0.299, 0.587, 0.114), tex2D(_MainTex, i.uv).rgb);
 
-
                 // calculate brightness of fragment
                 float luminance = min(shadow, shading) * albedo;
                 luminance = saturate(luminance * _InputExposure + _InputOffset);
                 luminance = clamp(luminance, _Clamp.x, _Clamp.y);
-
-                // testing only
-                /*
-                const int bands = 8;
-                luminance = floor(luminance * bands) / (bands - 1);
-                */
-                if(luminance <= 0.4){luminance = 0;}
-                else if (luminance >= 0.6){luminance = 0;}
 
                 // calculate 
                 float4 frequencies = CalculateFrequency_Rune(i.uv, i.clipPos, ddx_fine(i.uv), ddy_fine(i.uv), LEVEL, _Scale);
@@ -217,6 +208,17 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                 float grazingSmoothing = _AAStretch * frequencies.x / frequencies.y;
                 float dots = AA_SDF(minSDF, smoothness + grazingSmoothing);
 
+
+
+
+
+                
+
+
+
+
+
+
                 #if _DEBUG_LUMINANCE
                 return float4(luminance.xxx, 1);
                 
@@ -235,23 +237,58 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                 
                 #elif _DEBUG_SDF
                 return minSDF;
+
+
+
+                #elif _DEBUG_DILSTEST1
+                    // testing only
+                    /*
+                    const int bands = 8;
+                    luminance = floor(luminance * bands) / (bands - 1);
+                    */
+
+                    if(luminance <= 0.4){luminance = 0;}
+                    else if (luminance >= 0.6){luminance = 0;}
+
+
+                    if(dots >= 0.5f)
+                    {
+                        if(dot1 >= 0.5f)
+                        {
+                            return _Color2;
+                        }
+                        else {
+                            return _Color1;
+                        }
+                    }
+
+
+                    float4 res = tex2D(_MainTex, i.uv) + dots;
+
+                    if(dot1 >= 0.5f)
+                    {
+                        return res + _Color1;
+                    }
+                    else {
+                        return res + _Color2;
+                    }
+                #elif _DEBUG_DILSTEST2
+                    return 0.5;
+                    dots = AA_SDF(minSDF, 0.0);
+                    return dots;
+                    return lerp(_Color1, dots, 0.5);
+
+
+
+
                 #endif
 
-                // testing only
-                /*
-                return 0.5;
-                dots = AA_SDF(minSDF, 0.0);
-                return dots;
-                return lerp(_Color1, dots, 0.5);
-                */
-                float halfPoint = 0.5f;
-                if(dot1 >= halfPoint)
-                {
-                    return _Color1;
-                }
-                else {
-                    return _Color2 + dots;
-                }
+
+
+
+
+
+
 
                 // lerp in perceptual space
                 return Gamma22ToLinear(lerp(LinearToGamma22(_Color1), LinearToGamma22(_Color2), dots));

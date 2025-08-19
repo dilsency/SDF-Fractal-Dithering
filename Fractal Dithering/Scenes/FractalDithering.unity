@@ -1484,6 +1484,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1bb9685e981f45979cfdbc48e2753c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveSpeed: 2
+  lookSpeedH: 2
+  lookSpeedV: 2
+  zoomSpeed: 2
+  dragSpeed: 3
+  targetLookAt: {fileID: 1049876258}
+  uiText: {fileID: 1969459211}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
