@@ -196,16 +196,9 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
 
 
                 #if _DEBUG_DILSTEST2
-                    if(dot1 >= 0.6 || dot1 <= 0.4)
-                    {
-                        luminance = 0;
-                    }
+                    luminance = GetBandedDotDensity(dot1);
                 #elif _DEBUG_DILSTEST3
                     luminance = GetBandedDotDensity(dot1);
-                    /*if(dot1 >= 0.6 || dot1 <= 0.4)
-                    {
-                        luminance = 0.2;
-                    }*/
                 #endif
 
 
@@ -341,10 +334,10 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                     {
                         if(dot1 >= 0.5f)
                         {
-                            return resAnti - dots * 0.2;
+                            return resAnti - dots * 0.1;
                         }
                         else {
-                            return res - dots * 0.2;
+                            return res - dots * 0.1;
                         }
                     }
                     
