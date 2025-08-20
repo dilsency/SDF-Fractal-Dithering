@@ -27,7 +27,7 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
         [Min(0)] _AAStretch ("AA Stretch", float) = 0.125
         
         [KeywordEnum(Circle, Square, Rhombus, Pentagon, Hexagon, Octogon, Star, Moon, Heart, CoolS)] _Shape ("SDF Shape", int) = 0
-        [KeywordEnum(None, Luminance, Freq, UV, Cell, Bayer, SDF, DilsTest1, DilsTest2)] _Debug ("Debug Mode",int) = 0
+        [KeywordEnum(None, Luminance, Freq, UV, Cell, Bayer, SDF, DilsTest1, DilsTest2, DilsTest3, DilsTest4)] _Debug ("Debug Mode",int) = 0
     }
     SubShader
     {
@@ -41,7 +41,7 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
             
             #pragma target 4.5
             
-            #pragma shader_feature _DEBUG_NONE _DEBUG_LUMINANCE _DEBUG_FREQ _DEBUG_UV _DEBUG_CELL _DEBUG_BAYER _DEBUG_SDF _DEBUG_DILSTEST1 _DEBUG_DILSTEST2
+            #pragma shader_feature _DEBUG_NONE _DEBUG_LUMINANCE _DEBUG_FREQ _DEBUG_UV _DEBUG_CELL _DEBUG_BAYER _DEBUG_SDF _DEBUG_DILSTEST1 _DEBUG_DILSTEST2 _DEBUG_DILSTEST3 _DEBUG_DILSTEST4
             #pragma shader_feature _BAYER_LEVEL1 _BAYER_LEVEL2 _BAYER_LEVEL3 _BAYER_LEVEL4 _BAYER_LEVEL5 _BAYER_LEVEL6 _BAYER_LEVEL7 _BAYER_LEVEL8
             #pragma shader_feature _SHAPE_CIRCLE _SHAPE_SQUARE _SHAPE_RHOMBUS _SHAPE_PENTAGON _SHAPE_HEXAGON _SHAPE_OCTOGON _SHAPE_STAR _SHAPE_MOON _SHAPE_HEART _SHAPE_COOLS
             #pragma shader_feature QUANTIZE_DOTS
@@ -135,6 +135,47 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                 float zdepth = LinearEyeDepth(screenPos.z, _ZBufferParams);
                 return zdepth * exp2(-_Scale);
             }
+
+
+            float easeOutQuad(float x){
+                return 1 - (1 - x) * (1 - x);
+            }
+
+            float easeOutExpo(float x)
+            {
+                return x == 1 ? 1 : 1 - pow(2, -10 * x);
+            }
+
+            float GetBandedDotDensityUpper(float dot1, int numberOfBands)
+            {
+                float alpha = (dot1 - 0.5) * 2.0;
+                alpha = easeOutQuad(alpha);
+                float res = lerp(1.0,-0.0,alpha);
+                //if(res >= 0.8){res = 1.0;}
+                //res = floor(res * numberOfBands) / (numberOfBands - 1);
+                if(res < 0.3){res = 0;}
+                return res;
+            }
+            float GetBandedDotDensityLower(float dot1, int numberOfBands)
+            {
+                float alpha = dot1 * 2.0;
+                alpha = (1.0 - easeOutQuad(alpha)) * 2.0;
+                float res = lerp(1.0,-0.0,alpha);
+                //res = floor(res * numberOfBands) / (numberOfBands - 1);
+                //if(res < 0.3){res = 0;}
+                return res;
+            }
+            float GetBandedDotDensity(float dot1)
+            {
+                float alpha;
+                if(dot1 >= 0.5)
+                {
+                    return GetBandedDotDensityUpper(dot1, 4);
+                }
+                else {
+                    return GetBandedDotDensityLower(dot1, 4);
+                }
+            }
             
             half4 frag (v2f i) : SV_Target
             {
@@ -149,8 +190,26 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                 luminance = saturate(luminance * _InputExposure + _InputOffset);
                 luminance = clamp(luminance, _Clamp.x, _Clamp.y);
 
+
                 // calculate 
                 float4 frequencies = CalculateFrequency_Rune(i.uv, i.clipPos, ddx_fine(i.uv), ddy_fine(i.uv), LEVEL, _Scale);
+
+
+                #if _DEBUG_DILSTEST2
+                    if(dot1 >= 0.6 || dot1 <= 0.4)
+                    {
+                        luminance = 0;
+                    }
+                #elif _DEBUG_DILSTEST3
+                    luminance = GetBandedDotDensity(dot1);
+                    /*if(dot1 >= 0.6 || dot1 <= 0.4)
+                    {
+                        luminance = 0.2;
+                    }*/
+                #endif
+
+
+
                 float logLevel = log2(frequencies.w / luminance);
                 float floorLog = floor(logLevel);
                 float fracLog = logLevel - floorLog; // same as frac(logLevel)
@@ -273,10 +332,64 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                         return res + _Color2;
                     }
                 #elif _DEBUG_DILSTEST2
+                    float4 resTex = tex2D(_MainTex, i.uv);
+                    float4 res = resTex + _Color1;
+                    float4 resAnti = resTex + _Color2;
+
+                    
+                    if(dots >= 0.5f)
+                    {
+                        if(dot1 >= 0.5f)
+                        {
+                            return resAnti - dots * 0.2;
+                        }
+                        else {
+                            return res - dots * 0.2;
+                        }
+                    }
+                    
+
+
+                    if(dot1 >= 0.5f)
+                    {
+                        return res + dots;
+                    }
+                    else {
+                        return resAnti + dots;
+                    }
+                #elif _DEBUG_DILSTEST3
+                    float4 resTex = tex2D(_MainTex, i.uv);
+                    float4 res = resTex + _Color1;
+                    float4 resAnti = resTex + _Color2;
+
+                    
+                    if(dots >= 0.5f)
+                    {
+                        if(dot1 >= 0.5f)
+                        {
+                            return _Color2 + dots * 0.3;
+                        }
+                        else {
+                            return _Color1 + dots * 0.3;
+                        }
+                    }
+                    
+
+
+                    if(dot1 >= 0.5f)
+                    {
+                        return res + dots;
+                    }
+                    else {
+                        return resAnti + dots;
+                    }
+                #elif _DEBUG_DILSTEST4
                     return 0.5;
                     dots = AA_SDF(minSDF, 0.0);
                     return dots;
                     return lerp(_Color1, dots, 0.5);
+
+
 
 
 
