@@ -315,7 +315,7 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                     }
 
 
-                    float4 res = tex2D(_MainTex, i.uv) + dots;
+                    float4 res = tex2D(_MainTex, i.uv * _MainTex_ST.xy) + dots;
 
                     if(dot1 >= 0.5f)
                     {
@@ -325,7 +325,7 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                         return res + _Color2;
                     }
                 #elif _DEBUG_DILSTEST2
-                    float4 resTex = tex2D(_MainTex, i.uv);
+                    float4 resTex = tex2D(_MainTex, i.uv * _MainTex_ST.xy);
                     float4 res = resTex + _Color1;
                     float4 resAnti = resTex + _Color2;
 
@@ -351,7 +351,7 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                         return resAnti + dots;
                     }
                 #elif _DEBUG_DILSTEST3
-                    float4 resTex = tex2D(_MainTex, i.uv);
+                    float4 resTex = tex2D(_MainTex, i.uv * _MainTex_ST.xy);
                     float4 res = resTex + _Color1;
                     float4 resAnti = resTex + _Color2;
 
