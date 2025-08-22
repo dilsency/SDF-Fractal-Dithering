@@ -8,12 +8,29 @@ public class TestScriptCube : MonoBehaviour
         
     }
 
+    [SerializeField]
+    bool shouldRotateLeft = true;
+    [SerializeField]
+    bool shouldRotateForward = true;
+    [SerializeField]
+    bool shouldRotateUp = true;
+
     // Update is called once per frame
     void Update()
     {
         Vector3 eulers = new Vector3();
-        eulers += Vector3.left;
-        eulers += Vector3.forward;
+        if (shouldRotateLeft)
+        {
+            eulers += Vector3.left;
+        }
+        if (shouldRotateForward)
+        {
+            eulers += Vector3.forward;
+        }
+        if (shouldRotateUp)
+        {
+            eulers += Vector3.up;
+        }
         eulers *= Time.deltaTime * 10.0f;
 
         transform.Rotate(eulers);
