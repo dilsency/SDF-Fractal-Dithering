@@ -176,9 +176,89 @@ Shader "Unlit/Simple_FractalDithering_Cutoff"
                     return GetBandedDotDensityLower(dot1, 4);
                 }
             }
+
+            half4 frag_dilstest2(v2f i) : SV_Target
+            {
+                // surface properties
+                float shadow = MainLightRealtimeShadow(TransformWorldToShadowCoord(i.positionWS));
+                float dot1 = dot(normalize(i.normalWS), _MainLightPosition.xyz);
+                float shading = pow(saturate(dot1), .5);
+                float albedo = dot(float3(0.299, 0.587, 0.114), tex2D(_MainTex, i.uv).rgb);
+
+                // calculate brightness of fragment
+                float luminance = min(shadow, shading) * albedo;
+                luminance = saturate(luminance * _InputExposure + _InputOffset);
+                luminance = clamp(luminance, _Clamp.x, _Clamp.y);
+
+                // calculate 
+                float4 frequencies = CalculateFrequency_Rune(i.uv, i.clipPos, ddx_fine(i.uv), ddy_fine(i.uv), LEVEL, _Scale);
+
+                float logLevel = log2(frequencies.w / luminance);
+                float floorLog = floor(logLevel);
+                float fracLog = logLevel - floorLog; // same as frac(logLevel)
+
+                // each tile contains N*N cells of Bayer pattern
+                float2 tileUV = (frac(i.uv * exp2(-floorLog)));
+                // each cell spans covers 1 dot but is offset by (0.5, 0.5)
+                float2 cellUV = frac(tileUV * LEVEL_RESOLUTION) - 0.5;
+
+                // Calculate 4 nearest Bayer samples for this cell
+                uint2 cellCoord = (uint2)(tileUV * LEVEL_RESOLUTION);
+                float4 bayer = float4(
+                    GetBayerFromCoordLevel_Direct(cellCoord + uint2(0,0), LEVEL),
+                    GetBayerFromCoordLevel_Direct(cellCoord + uint2(1,0), LEVEL),
+                    GetBayerFromCoordLevel_Direct(cellCoord + uint2(0,1), LEVEL),
+                    GetBayerFromCoordLevel_Direct(cellCoord + uint2(1,1), LEVEL));
+
+                // number each bayer dot sequentially then subtract the count of dots on the level above. ie 2^(N-1)
+                float4 bayerMask = (bayer * LEVEL_DOTCOUNT) - LEVEL_PREV_DOTCOUNT; // only want the dots that weren't on prev level
+
+                // create a 0-1 mask for each Bayer dot that controls if it can be seen (also scales the dot in)
+                const float numNewDots = LEVEL_DOTCOUNT - LEVEL_PREV_DOTCOUNT;
+
+                // Each dot is numbered sequentially in range [0, 2^N) according to its intensity value
+                // A dot will be visible if the value (fracLog*numNewDots) is greater than their value (when quantization is on, otherwise it blends in)
+                // Subtract the number of dots on the previous level (ie 2^(N-1)) so that this many dots have a negative value and are always visible
+                float invisible = numNewDots * (1-fracLog);
+                float4 scales = invisible - bayerMask;
+                #ifdef QUANTIZE_DOTS
+                scales = step(1,scales); // dot only appears when value is >1
+                #else
+                scales = saturate(scales); // 0-1 blend in dot
+                #endif
+
+                // scale the dots cell according to their bayer value so dots scale/appear with relation to fracLog
+                float4 scalar = rcp((fracLog * 0.5 + 0.5) * luminance * scales);
+                float2 sample0 = (cellUV + float2(+0.5, +0.5)) * scalar.x;
+                float2 sample1 = (cellUV + float2(-0.5, +0.5)) * scalar.y;
+                float2 sample2 = (cellUV + float2(+0.5, -0.5)) * scalar.z;
+                float2 sample3 = (cellUV + float2(-0.5, -0.5)) * scalar.w;
+
+                // sample SDF at 4 corners of the grid
+                // Each coordinates are scaled so dots not yet visible are infinitely small
+                float4 SDFs = float4(
+                    SDF(sample0, _DotRadius),
+                    SDF(sample1, _DotRadius),
+                    SDF(sample2, _DotRadius),
+                    SDF(sample3, _DotRadius));
+
+                // combine the 4 corner dot sdfs
+                float minSDF = min(min(SDFs.x, SDFs.y), min(SDFs.z, SDFs.w)) ;
+                
+                // turn SDF into antialiased edge
+                float smoothness = _AASmoothness;
+                float grazingSmoothing = _AAStretch * frequencies.x / frequencies.y;
+                float dots = AA_SDF(minSDF, smoothness + grazingSmoothing);
+
+                return Gamma22ToLinear(lerp(LinearToGamma22(_Color1), LinearToGamma22(_Color2), dots));
+            }
             
             half4 frag (v2f i) : SV_Target
             {
+                #if _DEBUG_DILSTEST2
+                    return frag_dilstest2(i);
+                #endif
+
                 // surface properties
                 float shadow = MainLightRealtimeShadow(TransformWorldToShadowCoord(i.positionWS));
                 float dot1 = dot(normalize(i.normalWS), _MainLightPosition.xyz);
